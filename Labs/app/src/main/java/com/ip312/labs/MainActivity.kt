@@ -10,6 +10,7 @@ import android.widget.CalendarView
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Button
+import android.widget.ImageView
 
 data class Player(
     val name: String,
@@ -77,6 +78,7 @@ class MainActivity : ComponentActivity() {
 
         val buttonRegister = findViewById<Button>(R.id.buttonRegister)
         val textResult = findViewById<TextView>(R.id.textResult)
+        val imageZodiac = findViewById<ImageView>(R.id.imageZodiac)
         buttonRegister.setOnClickListener {
 
             val name = editName.text.toString()
@@ -107,6 +109,26 @@ class MainActivity : ComponentActivity() {
                 birthDate = birthDate,
                 zodiac = zodiac
             )
+
+            val zodiacImage = when (player.zodiac) {
+                "Овен" -> R.drawable.aries
+                "Телец" -> R.drawable.taurus
+                "Близнецы" -> R.drawable.gemini
+                "Рак" -> R.drawable.cancer
+                "Лев" -> R.drawable.leo
+                "Дева" -> R.drawable.virgo
+                "Весы" -> R.drawable.libra
+                "Скорпион" -> R.drawable.scorpio
+                "Стрелец" -> R.drawable.sagittarius
+                "Козерог" -> R.drawable.capricorn
+                "Водолей" -> R.drawable.aquarius
+                "Рыбы" -> R.drawable.pisces
+                else -> 0
+            }
+
+            if (zodiacImage != 0) {
+                imageZodiac.setImageResource(zodiacImage)
+            }
 
             textResult.text = """
             ФИО: ${player.name}
