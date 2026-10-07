@@ -24,6 +24,7 @@ class MainActivity : FragmentActivity() {
         viewPager.adapter = MainPagerAdapter(this)
 
         val tabTitles = arrayOf(
+            "Игра",
             "Регистрация",
             "Правила",
             "Авторы",
