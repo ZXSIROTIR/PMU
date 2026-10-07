@@ -5,15 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.tabs.TabLayoutMediator
 
-/*data class Player(
-    val name: String,
-    val gender: String,
-    val course: String,
-    val difficulty: Int,
-    val birthDate: String,
-    val zodiac: String
-)*/
-
 class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

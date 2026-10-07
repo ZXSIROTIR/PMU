@@ -8,14 +8,14 @@ class MainPagerAdapter(
     activity: FragmentActivity
 ) : FragmentStateAdapter(activity) {
 
-    override fun getItemCount(): Int = 3
+    override fun getItemCount(): Int = 4
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
             0 -> Registration()
             1 -> Rules()
             2 -> Author()
-            /*3 -> SettingsFragment()*/
+            3 -> Settings()
             else -> Registration()
         }
     }
