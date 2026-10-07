@@ -6,15 +6,26 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PointF
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
+
+interface GameListener {
+
+    fun onBugHit(points: Int)
+
+    fun onMiss(penalty: Int)
+}
 
 class Buggame @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
+
+    var listener: GameListener? = null
 
     private val bugs = mutableListOf<Bug>()
 
@@ -166,6 +177,53 @@ class Buggame @JvmOverloads constructor(
             bodyPaint
         )
 
+    }
+
+    override fun onTouchEvent(
+        event: MotionEvent
+    ): Boolean {
+
+        if (!running) {
+            return true
+        }
+
+        if (event.action == MotionEvent.ACTION_UP) {
+
+            val touchX = event.x
+            val touchY = event.y
+
+            var hitBug: Bug? = null
+
+            for (i in bugs.indices.reversed()) {
+
+                val bug = bugs[i]
+
+                val dx = touchX - bug.position.x
+                val dy = touchY - bug.position.y
+
+                val distance = sqrt(dx * dx + dy * dy)
+
+                if (distance <= bug.size) {
+                    hitBug = bug
+                    break
+                }
+            }
+
+            if (hitBug != null) {
+
+                bugs.remove(hitBug)
+
+                listener?.onBugHit(hitBug.points)
+
+            } else {
+
+                listener?.onMiss(5)
+            }
+
+            invalidate()
+        }
+
+        return true
     }
 
     override fun onDraw(canvas: Canvas) {
