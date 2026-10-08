@@ -79,6 +79,21 @@
             android:max="29"
             android:progress="4" />
 
+        <TextView
+            android:id="@+id/textBugSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Размер жуков: 5"
+            android:textSize="18sp" />
+
+        <SeekBar
+            android:id="@+id/seekBugSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="9"
+            android:progress="4" />
+
     </LinearLayout>
 
 </ScrollView>

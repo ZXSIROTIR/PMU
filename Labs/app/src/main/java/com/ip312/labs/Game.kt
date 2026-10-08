@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 
 class Game : Fragment(),
@@ -17,6 +17,16 @@ class Game : Fragment(),
     private lateinit var textHits: TextView
     private lateinit var textMisses: TextView
     private lateinit var textTime: TextView
+
+    private lateinit var resultPanel: View
+    private lateinit var resultScore: TextView
+    private lateinit var resultHits: TextView
+    private lateinit var resultMisses: TextView
+    private lateinit var resultAccuracy: TextView
+    private lateinit var buttonRestart: Button
+
+    private lateinit var startPanel: View
+    private lateinit var buttonStart: Button
 
     private var score = 0
     private var hits = 0
@@ -51,12 +61,31 @@ class Game : Fragment(),
         textMisses = view.findViewById(R.id.textMisses)
         textTime = view.findViewById(R.id.textTime)
 
+        resultPanel = view.findViewById(R.id.resultPanel)
+        resultScore = view.findViewById(R.id.resultScore)
+        resultHits = view.findViewById(R.id.resultHits)
+        resultMisses = view.findViewById(R.id.resultMisses)
+        resultAccuracy = view.findViewById(R.id.resultAccuracy)
+        buttonRestart = view.findViewById(R.id.buttonRestart)
+
+        startPanel = view.findViewById(R.id.startPanel)
+        buttonStart = view.findViewById(R.id.buttonStart)
+
         gameView.listener = this
 
-        view.post { startGame() }
+        buttonStart.setOnClickListener {
+            startPanel.visibility = View.GONE
+            startGame()
+        }
+
+        buttonRestart.setOnClickListener {
+            startGame()
+        }
     }
 
     private fun startGame() {
+
+        resultPanel.visibility = View.GONE
 
         score = 0
         hits = 0
@@ -67,13 +96,16 @@ class Game : Fragment(),
         val speedLevel = prefs.getInt("speed", 1) + 1
         val maxBugs = prefs.getInt("cockroaches", 4) + 1
         val roundMinutes = prefs.getInt("round", 4) + 1
+        val sizeLevel = prefs.getInt("bugSize", 4) + 1
 
         val speedMultiplier = 0.5f + speedLevel * 0.15f
+        val sizeMultiplier = 0.5f + sizeLevel * 0.1f
 
         gameView.startGame(
             durationMs = roundMinutes * 60_000L,
             maxBugs = maxBugs,
-            speedMultiplier = speedMultiplier
+            speedMultiplier = speedMultiplier,
+            sizeMultiplier = sizeMultiplier
         )
     }
 
@@ -100,11 +132,19 @@ class Game : Fragment(),
     }
 
     override fun onGameFinished() {
-        Toast.makeText(
-            requireContext(),
-            "Игра окончена! Очки: $score",
-            Toast.LENGTH_LONG
-        ).show()
+        textTime.text = "Время: 0"
+
+        val totalTaps = hits + misses
+        val accuracy =
+            if (totalTaps == 0) 0
+            else hits * 100 / totalTaps
+
+        resultScore.text = "Очки: $score"
+        resultHits.text = "Попадания: $hits"
+        resultMisses.text = "Промахи: $misses"
+        resultAccuracy.text = "Точность: $accuracy%"
+
+        resultPanel.visibility = View.VISIBLE
     }
 
     override fun onDestroyView() {

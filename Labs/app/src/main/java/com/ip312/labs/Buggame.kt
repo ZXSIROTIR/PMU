@@ -6,8 +6,10 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PointF
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.graphics.ColorUtils
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -39,6 +41,24 @@ class Buggame @JvmOverloads constructor(
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val detailPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
+    // Цвет фона поля берётся из текущей темы
+    private val fieldColor: Int = run {
+        val value = TypedValue()
+        if (context.theme.resolveAttribute(
+                android.R.attr.colorBackground,
+                value,
+                true
+            )
+        ) {
+            value.data
+        } else {
+            Color.WHITE
+        }
+    }
+
+    private val isDarkField: Boolean =
+        ColorUtils.calculateLuminance(fieldColor) < 0.5
+
     private val random = Random.Default
 
     private var nextId = 1L
@@ -49,15 +69,18 @@ class Buggame @JvmOverloads constructor(
 
     private var maxBugs = 5
     private var speedMultiplier = 1f
+    private var sizeMultiplier = 1f
 
     fun startGame(
         durationMs: Long,
         maxBugs: Int,
-        speedMultiplier: Float
+        speedMultiplier: Float,
+        sizeMultiplier: Float
     ) {
         this.durationMs = durationMs
         this.maxBugs = maxBugs
         this.speedMultiplier = speedMultiplier
+        this.sizeMultiplier = sizeMultiplier
 
         bugs.clear()
 
@@ -95,7 +118,9 @@ class Buggame @JvmOverloads constructor(
             else -> BugType.RARE
         }
 
-        val margin = type.size
+        val bugSize = type.size * sizeMultiplier
+
+        val margin = bugSize
 
         val x = margin +
                 random.nextFloat() *
@@ -117,7 +142,7 @@ class Buggame @JvmOverloads constructor(
             id = nextId++,
             position = PointF(x, y),
             speed = type.baseSpeed * speedMultiplier,
-            size = type.size,
+            size = bugSize,
             type = type,
             points = type.points,
             directionX = directionX,
@@ -175,9 +200,17 @@ class Buggame @JvmOverloads constructor(
         val y = bug.position.y
 
         bodyPaint.color = when (bug.type) {
-            BugType.NORMAL -> Color.rgb(60, 60, 60)
-            BugType.FAST -> Color.rgb(40, 90, 200)
-            BugType.RARE -> Color.rgb(180, 70, 180)
+            BugType.NORMAL ->
+                if (isDarkField) Color.rgb(210, 210, 210)
+                else Color.rgb(60, 60, 60)
+
+            BugType.FAST ->
+                if (isDarkField) Color.rgb(100, 160, 255)
+                else Color.rgb(40, 90, 200)
+
+            BugType.RARE ->
+                if (isDarkField) Color.rgb(230, 120, 230)
+                else Color.rgb(180, 70, 180)
         }
 
         canvas.drawCircle(
@@ -196,7 +229,7 @@ class Buggame @JvmOverloads constructor(
             return true
         }
 
-        if (event.action == MotionEvent.ACTION_UP) {
+        if (event.action == MotionEvent.ACTION_DOWN) {
 
             val touchX = event.x
             val touchY = event.y
@@ -238,7 +271,7 @@ class Buggame @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        canvas.drawColor(Color.WHITE)
+        canvas.drawColor(fieldColor)
 
         val currentTime = System.currentTimeMillis()
 

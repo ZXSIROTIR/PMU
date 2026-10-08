@@ -72,6 +72,16 @@ class Settings : Fragment() {
                 R.id.textRound
             )
 
+        val seekBugSize =
+            view.findViewById<SeekBar>(
+                R.id.seekBugSize
+            )
+
+        val textBugSize =
+            view.findViewById<TextView>(
+                R.id.textBugSize
+            )
+
         seekSpeed.progress =
             prefs.getInt("speed", 1)
 
@@ -84,6 +94,9 @@ class Settings : Fragment() {
         seekRound.progress =
             prefs.getInt("round", 4)
 
+        seekBugSize.progress =
+            prefs.getInt("bugSize", 4)
+
         textSpeed.text =
             "Скорость игры: ${seekSpeed.progress + 1}"
 
@@ -95,6 +108,9 @@ class Settings : Fragment() {
 
         textRound.text =
             "Длительность раунда: ${seekRound.progress + 1} мин."
+
+        textBugSize.text =
+            "Размер жуков: ${seekBugSize.progress + 1}"
 
         seekSpeed.setOnSeekBarChangeListener(
             object : SeekBar.OnSeekBarChangeListener {
@@ -193,6 +209,34 @@ class Settings : Fragment() {
 
                     prefs.edit()
                         .putInt("round", progress)
+                        .apply()
+                }
+
+                override fun onStartTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
+
+                override fun onStopTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
+            }
+        )
+
+        seekBugSize.setOnSeekBarChangeListener(
+            object : SeekBar.OnSeekBarChangeListener {
+
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    textBugSize.text =
+                        "Размер жуков: ${progress + 1}"
+
+                    prefs.edit()
+                        .putInt("bugSize", progress)
                         .apply()
                 }
 
