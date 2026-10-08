@@ -1,5 +1,6 @@
 package com.ip312.labs
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,13 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 
 class Settings : Fragment() {
+
+    private val prefs by lazy {
+        requireContext().getSharedPreferences(
+            "game_settings",
+            Context.MODE_PRIVATE
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,75 +43,169 @@ class Settings : Fragment() {
             view.findViewById<TextView>(R.id.textSpeed)
 
         val seekCockroaches =
-            view.findViewById<SeekBar>(R.id.seekCockroaches)
+            view.findViewById<SeekBar>(
+                R.id.seekCockroaches
+            )
 
         val textCockroaches =
-            view.findViewById<TextView>(R.id.textCockroaches)
+            view.findViewById<TextView>(
+                R.id.textCockroaches
+            )
 
         val seekBonus =
-            view.findViewById<SeekBar>(R.id.seekBonus)
+            view.findViewById<SeekBar>(
+                R.id.seekBonus
+            )
 
         val textBonus =
-            view.findViewById<TextView>(R.id.textBonus)
+            view.findViewById<TextView>(
+                R.id.textBonus
+            )
 
         val seekRound =
-            view.findViewById<SeekBar>(R.id.seekRound)
+            view.findViewById<SeekBar>(
+                R.id.seekRound
+            )
 
         val textRound =
-            view.findViewById<TextView>(R.id.textRound)
+            view.findViewById<TextView>(
+                R.id.textRound
+            )
+
+        seekSpeed.progress =
+            prefs.getInt("speed", 1)
+
+        seekCockroaches.progress =
+            prefs.getInt("cockroaches", 4)
+
+        seekBonus.progress =
+            prefs.getInt("bonus", 9)
+
+        seekRound.progress =
+            prefs.getInt("round", 4)
+
+        textSpeed.text =
+            "Скорость игры: ${seekSpeed.progress + 1}"
+
+        textCockroaches.text =
+            "Максимум тараканов: ${seekCockroaches.progress + 1}"
+
+        textBonus.text =
+            "Интервал бонусов: ${seekBonus.progress + 1} сек."
+
+        textRound.text =
+            "Длительность раунда: ${seekRound.progress + 1} мин."
 
         seekSpeed.setOnSeekBarChangeListener(
-            createListener { progress ->
-                textSpeed.text =
-                    "Скорость игры: ${progress + 1}"
+            object : SeekBar.OnSeekBarChangeListener {
+
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    textSpeed.text =
+                        "Скорость игры: ${progress + 1}"
+
+                    prefs.edit()
+                        .putInt("speed", progress)
+                        .apply()
+                }
+
+                override fun onStartTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
+
+                override fun onStopTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
             }
         )
 
         seekCockroaches.setOnSeekBarChangeListener(
-            createListener { progress ->
-                textCockroaches.text =
-                    "Максимум тараканов: ${progress + 1}"
+            object : SeekBar.OnSeekBarChangeListener {
+
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    textCockroaches.text =
+                        "Максимум тараканов: ${progress + 1}"
+
+                    prefs.edit()
+                        .putInt("cockroaches", progress)
+                        .apply()
+                }
+
+                override fun onStartTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
+
+                override fun onStopTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
             }
         )
 
         seekBonus.setOnSeekBarChangeListener(
-            createListener { progress ->
-                textBonus.text =
-                    "Интервал бонусов: ${progress + 1} сек."
+            object : SeekBar.OnSeekBarChangeListener {
+
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    textBonus.text =
+                        "Интервал бонусов: ${progress + 1} сек."
+
+                    prefs.edit()
+                        .putInt("bonus", progress)
+                        .apply()
+                }
+
+                override fun onStartTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
+
+                override fun onStopTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
             }
         )
 
         seekRound.setOnSeekBarChangeListener(
-            createListener { progress ->
-                textRound.text =
-                    "Длительность раунда: ${progress + 1} мин."
+            object : SeekBar.OnSeekBarChangeListener {
+
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    textRound.text =
+                        "Длительность раунда: ${progress + 1} мин."
+
+                    prefs.edit()
+                        .putInt("round", progress)
+                        .apply()
+                }
+
+                override fun onStartTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
+
+                override fun onStopTrackingTouch(
+                    seekBar: SeekBar?
+                ) {
+                }
             }
         )
-    }
-
-    private fun createListener(
-        action: (Int) -> Unit
-    ): SeekBar.OnSeekBarChangeListener {
-
-        return object : SeekBar.OnSeekBarChangeListener {
-
-            override fun onProgressChanged(
-                seekBar: SeekBar?,
-                progress: Int,
-                fromUser: Boolean
-            ) {
-                action(progress)
-            }
-
-            override fun onStartTrackingTouch(
-                seekBar: SeekBar?
-            ) {
-            }
-
-            override fun onStopTrackingTouch(
-                seekBar: SeekBar?
-            ) {
-            }
-        }
     }
 }

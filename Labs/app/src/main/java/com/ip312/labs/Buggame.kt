@@ -18,6 +18,10 @@ interface GameListener {
     fun onBugHit(points: Int)
 
     fun onMiss(penalty: Int)
+
+    fun onTimeChanged(seconds: Long)
+
+    fun onGameFinished()
 }
 
 class Buggame @JvmOverloads constructor(
@@ -26,6 +30,9 @@ class Buggame @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     var listener: GameListener? = null
+
+    private var durationMs = 60_000L
+    private var startTime = 0L
 
     private val bugs = mutableListOf<Bug>()
 
@@ -44,9 +51,11 @@ class Buggame @JvmOverloads constructor(
     private var speedMultiplier = 1f
 
     fun startGame(
+        durationMs: Long,
         maxBugs: Int,
         speedMultiplier: Float
     ) {
+        this.durationMs = durationMs
         this.maxBugs = maxBugs
         this.speedMultiplier = speedMultiplier
 
@@ -55,8 +64,9 @@ class Buggame @JvmOverloads constructor(
         nextId = 1L
         running = true
 
-        lastFrameTime = System.currentTimeMillis()
-        lastSpawnTime = lastFrameTime
+        startTime = System.currentTimeMillis()
+        lastFrameTime = startTime
+        lastSpawnTime = startTime
 
         repeat(minOf(3, maxBugs)) {
             createBug()
@@ -176,7 +186,6 @@ class Buggame @JvmOverloads constructor(
             bug.size * 0.55f,
             bodyPaint
         )
-
     }
 
     override fun onTouchEvent(
@@ -235,6 +244,19 @@ class Buggame @JvmOverloads constructor(
 
         if (running) {
 
+            val elapsed = currentTime - startTime
+            val remaining = durationMs - elapsed
+            val seconds = (remaining / 1000L).coerceAtLeast(0L)
+
+            listener?.onTimeChanged(seconds)
+
+            if (remaining <= 0L) {
+                running = false
+                listener?.onGameFinished()
+                invalidate()
+                return
+            }
+
             val deltaTime =
                 if (lastFrameTime == 0L) {
                     0f
@@ -246,9 +268,7 @@ class Buggame @JvmOverloads constructor(
 
             updateBugs(deltaTime)
 
-            if (
-                currentTime - lastSpawnTime >= 1000L
-            ) {
+            if (currentTime - lastSpawnTime >= 1000L) {
                 createBug()
                 lastSpawnTime = currentTime
             }
