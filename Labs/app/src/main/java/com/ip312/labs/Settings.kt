@@ -110,7 +110,7 @@ class Settings : Fragment() {
             "Длительность раунда: ${seekRound.progress + 1} мин."
 
         textBugSize.text =
-            "Размер жуков: ${seekBugSize.progress + 1}"
+            "Размер жуков: ${seekBugSize.progress + 2}"
 
         seekSpeed.setOnSeekBarChangeListener(
             object : SeekBar.OnSeekBarChangeListener {
@@ -233,7 +233,7 @@ class Settings : Fragment() {
                     fromUser: Boolean
                 ) {
                     textBugSize.text =
-                        "Размер жуков: ${progress + 1}"
+                        "Размер жуков: ${progress + 2}"
 
                     prefs.edit()
                         .putInt("bugSize", progress)

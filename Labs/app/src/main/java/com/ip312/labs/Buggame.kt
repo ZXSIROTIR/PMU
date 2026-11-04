@@ -205,12 +205,12 @@ class Buggame @JvmOverloads constructor(
                 else Color.rgb(60, 60, 60)
 
             BugType.FAST ->
-                if (isDarkField) Color.rgb(100, 160, 255)
-                else Color.rgb(40, 90, 200)
+                if (isDarkField) Color.rgb(255, 0, 0)
+                else Color.rgb(255, 0, 0)
 
             BugType.RARE ->
-                if (isDarkField) Color.rgb(230, 120, 230)
-                else Color.rgb(180, 70, 180)
+                if (isDarkField) Color.rgb(250, 255, 0)
+                else Color.rgb(250, 255, 0)
         }
 
         canvas.drawCircle(
