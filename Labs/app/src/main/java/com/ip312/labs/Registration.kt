@@ -13,18 +13,16 @@ import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.ip312.labs.data.User
+import kotlinx.coroutines.launch
 
 class Registration : Fragment() {
 
-    data class Player(
-        val name: String,
-        val gender: String,
-        val course: String,
-        val difficulty: Int,
-        val birthDate: String,
-        val zodiac: String
-    )
+    private lateinit var viewModel: MainViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,6 +41,8 @@ class Registration : Fragment() {
         savedInstanceState: Bundle?
     ) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
         val editName = view.findViewById<EditText>(R.id.editName)
 
@@ -127,7 +127,7 @@ class Registration : Fragment() {
 
         buttonRegister.setOnClickListener {
 
-            val name = editName.text.toString()
+            val name = editName.text.toString().trim()
 
             if (name.isBlank()) {
                 editName.error = "Введите ФИО"
@@ -140,55 +140,67 @@ class Registration : Fragment() {
                 else -> "Не указан"
             }
 
-            val course =
-                spinnerCourse.selectedItem.toString()
-
-            val difficulty =
-                seekDifficulty.progress + 1
-
-            val birthDate =
-                "$selectedDay.$selectedMonth.$selectedYear"
-
-            val zodiac =
-                getZodiac(selectedDay, selectedMonth)
-
-            val player = Player(
+            val newUser = User(
                 name = name,
                 gender = gender,
-                course = course,
-                difficulty = difficulty,
-                birthDate = birthDate,
-                zodiac = zodiac
+                course = spinnerCourse.selectedItem.toString(),
+                difficulty = seekDifficulty.progress + 1,
+                birthDate = "$selectedDay.$selectedMonth.$selectedYear",
+                zodiac = getZodiac(selectedDay, selectedMonth)
             )
 
-            val zodiacImage = when (player.zodiac) {
-                "Овен" -> R.drawable.aries
-                "Телец" -> R.drawable.taurus
-                "Близнецы" -> R.drawable.gemini
-                "Рак" -> R.drawable.cancer
-                "Лев" -> R.drawable.leo
-                "Дева" -> R.drawable.virgo
-                "Весы" -> R.drawable.libra
-                "Скорпион" -> R.drawable.scorpio
-                "Стрелец" -> R.drawable.sagittarius
-                "Козерог" -> R.drawable.capricorn
-                "Водолей" -> R.drawable.aquarius
-                "Рыбы" -> R.drawable.pisces
-                else -> 0
-            }
+            buttonRegister.isEnabled = false
 
-            if (zodiacImage != 0) {
-                imageZodiac.setImageResource(zodiacImage)
-            }
+            viewLifecycleOwner.lifecycleScope.launch {
 
-            textResult.text = """
-                ФИО: ${player.name}
-                Пол: ${player.gender}
-                Курс: ${player.course}
-                Уровень игры: ${player.difficulty}
-                Дата рождения: ${player.birthDate}
-                Знак зодиака: ${player.zodiac}
-            """.trimIndent()
+                val player = viewModel.registerUser(newUser)
+
+                buttonRegister.isEnabled = true
+
+                if (player == null) {
+                    editName.error =
+                        "Игрок с таким ФИО уже есть. Выберите его в меню (⋮)"
+                    return@launch
+                }
+
+                val zodiacImage = when (player.zodiac) {
+                    "Овен" -> R.drawable.aries
+                    "Телец" -> R.drawable.taurus
+                    "Близнецы" -> R.drawable.gemini
+                    "Рак" -> R.drawable.cancer
+                    "Лев" -> R.drawable.leo
+                    "Дева" -> R.drawable.virgo
+                    "Весы" -> R.drawable.libra
+                    "Скорпион" -> R.drawable.scorpio
+                    "Стрелец" -> R.drawable.sagittarius
+                    "Козерог" -> R.drawable.capricorn
+                    "Водолей" -> R.drawable.aquarius
+                    "Рыбы" -> R.drawable.pisces
+                    else -> 0
+                }
+
+                if (zodiacImage != 0) {
+                    imageZodiac.setImageResource(zodiacImage)
+                }
+
+                textResult.text = """
+                    ФИО: ${player.name}
+                    Пол: ${player.gender}
+                    Курс: ${player.course}
+                    Уровень игры: ${player.difficulty}
+                    Дата рождения: ${player.birthDate}
+                    Знак зодиака: ${player.zodiac}
+                """.trimIndent()
+
+                Toast.makeText(
+                    requireContext(),
+                    "Игрок «${player.name}» зарегистрирован",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                editName.text.clear()
+                radioGender.clearCheck()
+            }
         }
     }
 
