@@ -2,15 +2,34 @@ package com.ip312.labs.data
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface RecordDao {
+abstract class RecordDao {
 
-    @Insert
-    suspend fun insert(record: GameRecord): Long
+    @Query("SELECT * FROM records WHERE userId = :userId LIMIT 1")
+    abstract suspend fun getByUser(userId: Long): GameRecord?
 
+    // Из-за уникального индекса по userId старая запись игрока заменяется новой
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertOrReplace(record: GameRecord): Long
+
+    @Transaction
+    open suspend fun saveIfBetter(record: GameRecord): Boolean {
+        val old = getByUser(record.userId)
+
+        if (old != null && old.score >= record.score) {
+            return false
+        }
+
+        insertOrReplace(record)
+        return true
+    }
+
+    /** Топ-100 личных рекордов; Flow сам обновляется при изменении таблиц. */
     @Query(
         """
         SELECT r.id AS id,
@@ -27,5 +46,5 @@ interface RecordDao {
         LIMIT 100
         """
     )
-    fun observeTop(): Flow<List<RecordRow>>
+    abstract fun observeTop(): Flow<List<RecordRow>>
 }

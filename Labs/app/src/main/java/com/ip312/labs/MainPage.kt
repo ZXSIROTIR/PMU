@@ -8,15 +8,16 @@ class MainPagerAdapter(
     activity: FragmentActivity
 ) : FragmentStateAdapter(activity) {
 
-    override fun getItemCount(): Int = 5
+    override fun getItemCount(): Int = 6
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            0-> Game()
+            0 -> Game()
             1 -> Registration()
-            2 -> Rules()
-            3 -> Author()
-            4 -> Settings()
+            2 -> Records()
+            3 -> Rules()
+            4 -> Author()
+            5 -> Settings()
             else -> Game()
         }
     }

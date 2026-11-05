@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/** Зарегистрированный игрок. ФИО уникально. */
 @Entity(
     tableName = "users",
     indices = [Index(value = ["name"], unique = true)]

@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/** Результат одной сыгранной партии. */
 @Entity(
     tableName = "records",
     foreignKeys = [
@@ -15,7 +16,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("userId"), Index("score")]
+    indices = [Index(value = ["userId"], unique = true), Index("score")]
 )
 data class GameRecord(
     @PrimaryKey(autoGenerate = true)
@@ -24,7 +25,9 @@ data class GameRecord(
     val score: Int,
     val hits: Int,
     val misses: Int,
+    /** Уровень сложности игрока (1..10) на момент партии */
     val difficulty: Int,
     val roundMinutes: Int,
+    /** Время окончания партии, мс since epoch */
     val playedAt: Long
 )

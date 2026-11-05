@@ -42,6 +42,7 @@ class Game : Fragment(),
     private var hits = 0
     private var misses = 0
 
+    // Игрок, который начал текущую партию (текущий игрок может смениться посреди игры)
     private var activePlayer: User? = null
     private var roundMinutes = 1
 
@@ -90,6 +91,7 @@ class Game : Fragment(),
 
         gameView.listener = this
 
+        // Без игрока играть нельзя: результат некому записать
         viewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user == null) {
                 textStartPlayer.text =
@@ -202,12 +204,17 @@ class Game : Fragment(),
             .getInstance(requireContext())
             .recordDao()
 
-        resultSaved.text = "Сохранение результата…"
+        resultSaved.text = "Проверка рекорда…"
 
         lifecycleScope.launch {
-            dao.insert(record)
+            val isNewBest = dao.saveIfBetter(record)
+
             resultSaved.text =
-                "Результат игрока «${player.name}» сохранён во вкладке «Рекорды»"
+                if (isNewBest) {
+                    "Новый личный рекорд игрока «${player.name}»!\nСмотрите вкладку «Рекорды»"
+                } else {
+                    "Личный рекорд игрока «${player.name}» не побит"
+                }
         }
     }
 
