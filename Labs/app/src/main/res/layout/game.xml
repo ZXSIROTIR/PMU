@@ -113,6 +113,15 @@
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="20sp" />
 
+        <TextView
+            android:id="@+id/resultSaved"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp" />
+
         <Button
             android:id="@+id/buttonRestart"
             android:layout_width="wrap_content"
@@ -141,6 +150,15 @@
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="28sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textStartPlayer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="18sp" />
 
         <Button
             android:id="@+id/buttonStart"
