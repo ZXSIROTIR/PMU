@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -167,6 +168,14 @@ class Game : Fragment(),
 
     override fun onTimeChanged(seconds: Long) {
         textTime.text = "Время: $seconds"
+    }
+
+    override fun onBonusCollected() {
+        Toast.makeText(
+            requireContext(),
+            "Бонус собран!",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     override fun onGameFinished() {

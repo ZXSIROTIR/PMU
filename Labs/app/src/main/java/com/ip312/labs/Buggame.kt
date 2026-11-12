@@ -24,6 +24,8 @@ interface GameListener {
     fun onTimeChanged(seconds: Long)
 
     fun onGameFinished()
+
+    fun onBonusCollected()
 }
 
 class Buggame @JvmOverloads constructor(
@@ -72,6 +74,27 @@ class Buggame @JvmOverloads constructor(
 
     private var bonusIntervalMs = 15_000L
 
+    private class Bonus(
+        val position: PointF,
+        val size: Float,
+        val spawnTime: Long
+    )
+
+    private var bonus: Bonus? = null
+    private var lastBonusTime = 0L
+
+    private val bonusPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private val bonusRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 6f
+    }
+
+    private companion object {
+        const val BONUS_SIZE = 48f
+        const val BONUS_LIFETIME_MS = 5_000L
+    }
+
     fun startGame(
         durationMs: Long,
         maxBugs: Int,
@@ -93,6 +116,9 @@ class Buggame @JvmOverloads constructor(
         startTime = System.currentTimeMillis()
         lastFrameTime = startTime
         lastSpawnTime = startTime
+
+        bonus = null
+        lastBonusTime = startTime
 
         repeat(minOf(3, maxBugs)) {
             createBug()
@@ -153,6 +179,82 @@ class Buggame @JvmOverloads constructor(
         )
 
         bugs.add(bug)
+    }
+
+    private fun createBonus(now: Long) {
+
+        if (width <= 0 || height <= 0) {
+            return
+        }
+
+        val size = BONUS_SIZE
+        val margin = size * 1.5f
+
+        val x = margin +
+                random.nextFloat() *
+                (width - margin * 2)
+                    .coerceAtLeast(1f)
+
+        val y = margin +
+                random.nextFloat() *
+                (height - margin * 2)
+                    .coerceAtLeast(1f)
+
+        bonus = Bonus(PointF(x, y), size, now)
+    }
+
+    private fun updateBonus(now: Long) {
+
+        val current = bonus
+        val lifetime = minOf(BONUS_LIFETIME_MS, bonusIntervalMs)
+
+        if (current != null && now - current.spawnTime >= lifetime) {
+            bonus = null
+        }
+
+        if (now - lastBonusTime >= bonusIntervalMs) {
+            lastBonusTime = now
+            createBonus(now)
+        }
+    }
+
+    private fun drawBonus(
+        canvas: Canvas,
+        bonus: Bonus,
+        now: Long
+    ) {
+        val lifetime = minOf(BONUS_LIFETIME_MS, bonusIntervalMs)
+        val remaining = lifetime - (now - bonus.spawnTime)
+
+        if (remaining < 1500L && (now / 150L) % 2L == 0L) {
+            return
+        }
+
+        val pulse = 1f + 0.12f * sin(now / 150f)
+        val radius = bonus.size * pulse
+
+        val x = bonus.position.x
+        val y = bonus.position.y
+
+        val lineColor =
+            if (isDarkField) Color.WHITE else Color.BLACK
+
+        bonusPaint.color = Color.rgb(46, 204, 113)
+
+        canvas.drawCircle(x, y, radius, bonusPaint)
+
+        bonusRingPaint.color = lineColor
+        canvas.drawCircle(x, y, radius, bonusRingPaint)
+
+        detailPaint.color = lineColor
+        detailPaint.style = Paint.Style.STROKE
+        detailPaint.strokeWidth = 6f
+
+        val r = radius * 0.5f
+
+        canvas.drawLine(x - r, y - r, x + r, y + r, detailPaint)
+        canvas.drawLine(x + r, y + r, x + r * 0.1f, y + r, detailPaint)
+        canvas.drawLine(x + r, y + r, x + r, y + r * 0.1f, detailPaint)
     }
 
     private fun updateBugs(deltaTime: Float) {
@@ -237,6 +339,21 @@ class Buggame @JvmOverloads constructor(
             val touchX = event.x
             val touchY = event.y
 
+            val touchedBonus = bonus
+
+            if (touchedBonus != null) {
+
+                val bdx = touchX - touchedBonus.position.x
+                val bdy = touchY - touchedBonus.position.y
+
+                if (sqrt(bdx * bdx + bdy * bdy) <= touchedBonus.size * 1.3f) {
+                    bonus = null
+                    listener?.onBonusCollected()
+                    invalidate()
+                    return true
+                }
+            }
+
             var hitBug: Bug? = null
 
             for (i in bugs.indices.reversed()) {
@@ -288,6 +405,7 @@ class Buggame @JvmOverloads constructor(
 
             if (remaining <= 0L) {
                 running = false
+                bonus = null
                 listener?.onGameFinished()
                 invalidate()
                 return
@@ -308,11 +426,15 @@ class Buggame @JvmOverloads constructor(
                 createBug()
                 lastSpawnTime = currentTime
             }
+
+            updateBonus(currentTime)
         }
 
         for (bug in bugs) {
             drawBug(canvas, bug)
         }
+
+        bonus?.let { drawBonus(canvas, it, currentTime) }
 
         if (running) {
             postInvalidateOnAnimation()
