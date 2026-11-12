@@ -40,8 +40,7 @@ class Buggame @JvmOverloads constructor(
 
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val detailPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-    // Цвет фона поля берётся из текущей темы
+    
     private val fieldColor: Int = run {
         val value = TypedValue()
         if (context.theme.resolveAttribute(

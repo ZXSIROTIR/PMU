@@ -25,8 +25,6 @@ class RecordsAdapter : RecyclerView.Adapter<RecordsAdapter.Holder>() {
     private val dateFormat =
         SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
 
-    // Список короткий (≤100), а номера мест зависят от позиции,
-    // поэтому проще перерисовывать всё целиком.
     @SuppressLint("NotifyDataSetChanged")
     fun submit(list: List<RecordRow>) {
         items = list

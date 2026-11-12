@@ -8,7 +8,6 @@ import androidx.room.Query
 @Dao
 interface UserDao {
 
-    /** Бросает SQLiteConstraintException, если ФИО уже занято. */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(user: User): Long
 

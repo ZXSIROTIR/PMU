@@ -42,7 +42,6 @@ class MainActivity : FragmentActivity() {
             tab.text = tabTitles[position]
         }.attach()
 
-        // Меню: регистрация нового игрока / выбор ранее созданного
         toolbar.inflateMenu(R.menu.main_menu)
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {

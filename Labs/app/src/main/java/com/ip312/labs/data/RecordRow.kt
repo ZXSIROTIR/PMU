@@ -1,6 +1,5 @@
 package com.ip312.labs.data
 
-/** Строка таблицы рекордов: результат + имя игрока (JOIN records и users). */
 data class RecordRow(
     val id: Long,
     val name: String,

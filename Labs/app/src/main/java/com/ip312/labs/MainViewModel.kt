@@ -11,10 +11,6 @@ import com.ip312.labs.data.AppDatabase
 import com.ip312.labs.data.User
 import kotlinx.coroutines.launch
 
-/**
- * Общая для всех вкладок модель: хранит текущего игрока
- * и запоминает его между запусками приложения.
- */
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val db = AppDatabase.getInstance(app)
@@ -42,10 +38,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit().putLong(KEY_USER_ID, user.id).apply()
     }
 
-    /**
-     * Сохраняет нового игрока и делает его текущим.
-     * Возвращает null, если игрок с таким ФИО уже существует.
-     */
     suspend fun registerUser(user: User): User? {
         val dao = db.userDao()
 

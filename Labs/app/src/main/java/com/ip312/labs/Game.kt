@@ -42,7 +42,6 @@ class Game : Fragment(),
     private var hits = 0
     private var misses = 0
 
-    // Игрок, который начал текущую партию (текущий игрок может смениться посреди игры)
     private var activePlayer: User? = null
     private var roundMinutes = 1
 
@@ -91,7 +90,6 @@ class Game : Fragment(),
 
         gameView.listener = this
 
-        // Без игрока играть нельзя: результат некому записать
         viewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user == null) {
                 textStartPlayer.text =

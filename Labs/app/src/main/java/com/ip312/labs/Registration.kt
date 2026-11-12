@@ -198,7 +198,6 @@ class Registration : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                // Готовим форму для следующего игрока
                 editName.text.clear()
                 radioGender.clearCheck()
             }

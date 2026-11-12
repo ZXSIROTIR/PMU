@@ -5,7 +5,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/** Результат одной сыгранной партии. */
 @Entity(
     tableName = "records",
     foreignKeys = [
@@ -25,9 +24,7 @@ data class GameRecord(
     val score: Int,
     val hits: Int,
     val misses: Int,
-    /** Уровень сложности игрока (1..10) на момент партии */
     val difficulty: Int,
     val roundMinutes: Int,
-    /** Время окончания партии, мс since epoch */
     val playedAt: Long
 )

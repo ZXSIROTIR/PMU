@@ -13,7 +13,6 @@ abstract class RecordDao {
     @Query("SELECT * FROM records WHERE userId = :userId LIMIT 1")
     abstract suspend fun getByUser(userId: Long): GameRecord?
 
-    // Из-за уникального индекса по userId старая запись игрока заменяется новой
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertOrReplace(record: GameRecord): Long
 
@@ -29,7 +28,6 @@ abstract class RecordDao {
         return true
     }
 
-    /** Топ-100 личных рекордов; Flow сам обновляется при изменении таблиц. */
     @Query(
         """
         SELECT r.id AS id,
