@@ -5,11 +5,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PointF
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.abs
 import kotlin.math.cos
@@ -28,7 +31,7 @@ interface GameListener {
     fun onGameFinished()
 
     fun onBonusCollected()
-
+ 
     fun onBonusTick(secondsLeft: Long)
 }
 
@@ -46,6 +49,12 @@ class Buggame @JvmOverloads constructor(
 
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val detailPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private val skins: Map<BugType, Drawable?> = mapOf(
+        BugType.NORMAL to ContextCompat.getDrawable(context, R.drawable.bug_normal),
+        BugType.FAST to ContextCompat.getDrawable(context, R.drawable.bug_fast),
+        BugType.RARE to ContextCompat.getDrawable(context, R.drawable.bug_rare)
+    )
 
     private val fieldColor: Int = run {
         val value = TypedValue()
@@ -78,6 +87,8 @@ class Buggame @JvmOverloads constructor(
 
     private var bonusIntervalMs = 15_000L
 
+    private var useSkins = true
+
     private class Bonus(
         val position: PointF,
         val size: Float,
@@ -89,6 +100,7 @@ class Buggame @JvmOverloads constructor(
 
     private var tiltUntil = 0L
     private var lastTiltSeconds = 0L
+
 
     private var tiltX = 0f
     private var tiltY = 0f
@@ -103,6 +115,8 @@ class Buggame @JvmOverloads constructor(
     private companion object {
         const val BONUS_SIZE = 48f
         const val BONUS_LIFETIME_MS = 5_000L
+
+        const val SKIN_SCALE = 0.9f
 
         const val TILT_DURATION_MS = 10_000L
 
@@ -121,13 +135,15 @@ class Buggame @JvmOverloads constructor(
         maxBugs: Int,
         speedMultiplier: Float,
         sizeMultiplier: Float,
-        bonusIntervalMs: Long = 15_000L
+        bonusIntervalMs: Long = 15_000L,
+        useSkins: Boolean = true
     ) {
         this.durationMs = durationMs
         this.maxBugs = maxBugs
         this.speedMultiplier = speedMultiplier
         this.sizeMultiplier = sizeMultiplier
         this.bonusIntervalMs = bonusIntervalMs
+        this.useSkins = useSkins
 
         bugs.clear()
 
@@ -373,10 +389,47 @@ class Buggame @JvmOverloads constructor(
         }
     }
 
+    private fun drawSkin(
+        canvas: Canvas,
+        bug: Bug,
+        skin: Drawable
+    ) {
+        val x = bug.position.x
+        val y = bug.position.y
+
+        val half = (bug.size * SKIN_SCALE).toInt()
+
+        val velocityX = bug.directionX * bug.speed + bug.driftX
+        val velocityY = bug.directionY * bug.speed + bug.driftY
+
+        val angle =
+            atan2(velocityY, velocityX) * 180f / Math.PI.toFloat() + 90f
+
+        canvas.save()
+        canvas.rotate(angle, x, y)
+
+        skin.setBounds(
+            (x - half).toInt(),
+            (y - half).toInt(),
+            (x + half).toInt(),
+            (y + half).toInt()
+        )
+        skin.draw(canvas)
+
+        canvas.restore()
+    }
+
     private fun drawBug(
         canvas: Canvas,
         bug: Bug
     ) {
+        val skin = if (useSkins) skins[bug.type] else null
+
+        if (skin != null) {
+            drawSkin(canvas, bug, skin)
+            return
+        }
+
         val x = bug.position.x
         val y = bug.position.y
 

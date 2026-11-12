@@ -5,6 +5,8 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -50,6 +52,11 @@ class Game : Fragment(),
     private var gravityX = 0f
     private var gravityY = 0f
 
+    private var soundPool: SoundPool? = null
+    private var screamSoundId = 0
+    private var screamStreamId = 0
+    private var screamLoaded = false
+
     private var score = 0
     private var hits = 0
     private var misses = 0
@@ -93,6 +100,8 @@ class Game : Fragment(),
             .getSystemService(Context.SENSOR_SERVICE) as SensorManager
         accelerometer =
             sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+        initSound()
 
         resultPanel = view.findViewById(R.id.resultPanel)
         resultScore = view.findViewById(R.id.resultScore)
@@ -150,6 +159,7 @@ class Game : Fragment(),
         roundMinutes = prefs.getInt("round", 4) + 1
         val sizeLevel = prefs.getInt("bugSize", 4) + 1
         val bonusSeconds = prefs.getInt("bonus", 14) + 1
+        val arachnophobia = prefs.getBoolean("arachnophobia", false)
 
         val speedMultiplier = 0.5f + speedLevel * 0.15f
         val sizeMultiplier = 0.5f + sizeLevel * 0.1f
@@ -159,7 +169,8 @@ class Game : Fragment(),
             maxBugs = maxBugs,
             speedMultiplier = speedMultiplier,
             sizeMultiplier = sizeMultiplier,
-            bonusIntervalMs = bonusSeconds * 1000L
+            bonusIntervalMs = bonusSeconds * 1000L,
+            useSkins = !arachnophobia
         )
 
         return true
@@ -187,7 +198,47 @@ class Game : Fragment(),
         textTime.text = "Время: $seconds"
     }
 
+    private fun initSound() {
+
+        val attributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+
+        val pool = SoundPool.Builder()
+            .setMaxStreams(2)
+            .setAudioAttributes(attributes)
+            .build()
+
+        pool.setOnLoadCompleteListener { _, _, status ->
+            screamLoaded = (status == 0)
+        }
+
+        screamSoundId = pool.load(requireContext(), R.raw.bug_scream, 1)
+        soundPool = pool
+    }
+
+    private fun startScream() {
+        val pool = soundPool ?: return
+
+        if (!screamLoaded || screamStreamId != 0) {
+            return
+        }
+
+
+        screamStreamId = pool.play(screamSoundId, 0.9f, 0.9f, 1, 0, 1f)
+    }
+
+    private fun stopScream() {
+        if (screamStreamId != 0) {
+            soundPool?.stop(screamStreamId)
+            screamStreamId = 0
+        }
+    }
+
     override fun onBonusCollected() {
+        startScream()
+
         if (accelerometer == null) {
             Toast.makeText(
                 requireContext(),
@@ -201,6 +252,10 @@ class Game : Fragment(),
         textBonus.text =
             if (secondsLeft > 0L) "Бонус: наклоняйте телефон — $secondsLeft с"
             else ""
+
+        if (secondsLeft <= 0L) {
+            stopScream()
+        }
     }
 
     override fun onResume() {
@@ -217,6 +272,7 @@ class Game : Fragment(),
 
     override fun onPause() {
         sensorManager?.unregisterListener(this)
+        stopScream()
         super.onPause()
     }
 
@@ -239,6 +295,7 @@ class Game : Fragment(),
 
     override fun onGameFinished() {
         textTime.text = "Время: 0"
+        stopScream()
 
         val totalTaps = hits + misses
         val accuracy =
@@ -288,6 +345,10 @@ class Game : Fragment(),
 
     override fun onDestroyView() {
         gameView.stopGame()
+        stopScream()
+        soundPool?.release()
+        soundPool = null
+        screamLoaded = false
         super.onDestroyView()
     }
 }

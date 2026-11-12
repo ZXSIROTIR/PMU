@@ -94,6 +94,14 @@
             android:max="9"
             android:progress="4" />
 
+        <CheckBox
+            android:id="@+id/checkArachno"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Режим арахнофобии (вместо жуков — точки)"
+            android:textSize="18sp" />
+
     </LinearLayout>
 
 </ScrollView>

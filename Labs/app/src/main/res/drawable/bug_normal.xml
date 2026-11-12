@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Таракан (обычный жук). Рисунок «смотрит» вверх: в игре он поворачивается по направлению движения. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+
+    <!-- усики -->
+    <path
+        android:pathData="M29,10 L22,1 M35,10 L42,1"
+        android:strokeColor="#A1887F"
+        android:strokeLineCap="round"
+        android:strokeWidth="2" />
+
+    <!-- лапки -->
+    <path
+        android:pathData="M22,28 L9,23 M21,37 L7,38 M22,46 L10,53 M42,28 L55,23 M43,37 L57,38 M42,46 L54,53"
+        android:strokeColor="#A1887F"
+        android:strokeLineCap="round"
+        android:strokeWidth="3" />
+
+    <!-- тело -->
+    <path
+        android:fillColor="#8D5B3A"
+        android:pathData="M32,18 C43,18 45,34 43,46 C41,57 23,57 21,46 C19,34 21,18 32,18 Z"
+        android:strokeColor="#3E2723"
+        android:strokeWidth="1.5" />
+
+    <!-- крылья -->
+    <path
+        android:pathData="M32,24 L32,52"
+        android:strokeColor="#3E2723"
+        android:strokeWidth="1.5" />
+
+    <!-- голова -->
+    <path
+        android:fillColor="#6D4C41"
+        android:pathData="M26,14 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0"
+        android:strokeColor="#3E2723"
+        android:strokeWidth="1.5" />
+
+</vector>

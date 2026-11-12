@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -81,6 +82,20 @@ class Settings : Fragment() {
             view.findViewById<TextView>(
                 R.id.textBugSize
             )
+
+        val checkArachno =
+            view.findViewById<CheckBox>(
+                R.id.checkArachno
+            )
+
+        checkArachno.isChecked =
+            prefs.getBoolean("arachnophobia", false)
+
+        checkArachno.setOnCheckedChangeListener { _, checked ->
+            prefs.edit()
+                .putBoolean("arachnophobia", checked)
+                .apply()
+        }
 
         seekSpeed.progress =
             prefs.getInt("speed", 1)

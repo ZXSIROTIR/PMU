@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Быстрый жук (божья коровка). Рисунок «смотрит» вверх: в игре он поворачивается по направлению движения. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+
+    <!-- усики -->
+    <path
+        android:pathData="M29,11 L25,3 M35,11 L39,3"
+        android:strokeColor="#9E9E9E"
+        android:strokeLineCap="round"
+        android:strokeWidth="2" />
+
+    <!-- лапки -->
+    <path
+        android:pathData="M18,30 L8,26 M17,38 L6,40 M19,46 L10,54 M46,30 L56,26 M47,38 L58,40 M45,46 L54,54"
+        android:strokeColor="#9E9E9E"
+        android:strokeLineCap="round"
+        android:strokeWidth="3" />
+
+    <!-- панцирь -->
+    <path
+        android:fillColor="#E53935"
+        android:pathData="M15,38 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0"
+        android:strokeColor="#212121"
+        android:strokeWidth="1.5" />
+
+    <!-- шов между крыльями -->
+    <path
+        android:pathData="M32,22 L32,55"
+        android:strokeColor="#212121"
+        android:strokeWidth="2" />
+
+    <!-- пятнышки -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M19.5,32 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0 M37.5,32 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0 M18.5,44 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0 M38.5,44 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
+
+    <!-- голова -->
+    <path
+        android:fillColor="#616161"
+        android:pathData="M25,17 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0"
+        android:strokeColor="#212121"
+        android:strokeWidth="1.5" />
+
+</vector>
