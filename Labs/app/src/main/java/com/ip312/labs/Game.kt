@@ -1,6 +1,10 @@
 package com.ip312.labs
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +21,8 @@ import com.ip312.labs.data.User
 import kotlinx.coroutines.launch
 
 class Game : Fragment(),
-    GameListener {
+    GameListener,
+    SensorEventListener {
 
     private lateinit var viewModel: MainViewModel
 
@@ -26,6 +31,7 @@ class Game : Fragment(),
     private lateinit var textHits: TextView
     private lateinit var textMisses: TextView
     private lateinit var textTime: TextView
+    private lateinit var textBonus: TextView
 
     private lateinit var resultPanel: View
     private lateinit var resultScore: TextView
@@ -38,6 +44,11 @@ class Game : Fragment(),
     private lateinit var startPanel: View
     private lateinit var textStartPlayer: TextView
     private lateinit var buttonStart: Button
+
+    private var sensorManager: SensorManager? = null
+    private var accelerometer: Sensor? = null
+    private var gravityX = 0f
+    private var gravityY = 0f
 
     private var score = 0
     private var hits = 0
@@ -76,6 +87,12 @@ class Game : Fragment(),
         textHits = view.findViewById(R.id.textHits)
         textMisses = view.findViewById(R.id.textMisses)
         textTime = view.findViewById(R.id.textTime)
+        textBonus = view.findViewById(R.id.textBonus)
+
+        sensorManager = requireContext()
+            .getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer =
+            sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         resultPanel = view.findViewById(R.id.resultPanel)
         resultScore = view.findViewById(R.id.resultScore)
@@ -171,11 +188,53 @@ class Game : Fragment(),
     }
 
     override fun onBonusCollected() {
-        Toast.makeText(
-            requireContext(),
-            "Бонус собран!",
-            Toast.LENGTH_SHORT
-        ).show()
+        if (accelerometer == null) {
+            Toast.makeText(
+                requireContext(),
+                "На этом устройстве нет датчика наклона",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    override fun onBonusTick(secondsLeft: Long) {
+        textBonus.text =
+            if (secondsLeft > 0L) "Бонус: наклоняйте телефон — $secondsLeft с"
+            else ""
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        accelerometer?.let {
+            sensorManager?.registerListener(
+                this,
+                it,
+                SensorManager.SENSOR_DELAY_GAME
+            )
+        }
+    }
+
+    override fun onPause() {
+        sensorManager?.unregisterListener(this)
+        super.onPause()
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+
+        if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) {
+            return
+        }
+
+        val alpha = 0.15f
+
+        gravityX += alpha * (-event.values[0] - gravityX)
+        gravityY += alpha * (event.values[1] - gravityY)
+
+        gameView.setTilt(gravityX, gravityY)
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
     }
 
     override fun onGameFinished() {

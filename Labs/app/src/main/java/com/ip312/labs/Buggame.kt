@@ -10,6 +10,8 @@ import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.ColorUtils
+import kotlin.math.ceil
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -26,6 +28,8 @@ interface GameListener {
     fun onGameFinished()
 
     fun onBonusCollected()
+
+    fun onBonusTick(secondsLeft: Long)
 }
 
 class Buggame @JvmOverloads constructor(
@@ -83,6 +87,12 @@ class Buggame @JvmOverloads constructor(
     private var bonus: Bonus? = null
     private var lastBonusTime = 0L
 
+    private var tiltUntil = 0L
+    private var lastTiltSeconds = 0L
+
+    private var tiltX = 0f
+    private var tiltY = 0f
+
     private val bonusPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     private val bonusRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -93,6 +103,17 @@ class Buggame @JvmOverloads constructor(
     private companion object {
         const val BONUS_SIZE = 48f
         const val BONUS_LIFETIME_MS = 5_000L
+
+        const val TILT_DURATION_MS = 10_000L
+
+        const val TILT_ACCEL = 60f
+
+        const val TILT_MAX_DRIFT = 600f
+
+        const val TILT_FULL = 4f
+        const val TILT_MIN_SELF_FACTOR = 0.25f
+
+        const val DRIFT_DECAY = 3f
     }
 
     fun startGame(
@@ -120,11 +141,19 @@ class Buggame @JvmOverloads constructor(
         bonus = null
         lastBonusTime = startTime
 
+        tiltUntil = 0L
+        notifyBonusTick(startTime)
+
         repeat(minOf(3, maxBugs)) {
             createBug()
         }
 
         invalidate()
+    }
+
+    fun setTilt(gravityX: Float, gravityY: Float) {
+        tiltX = gravityX
+        tiltY = gravityY
     }
 
     fun stopGame() {
@@ -257,42 +286,89 @@ class Buggame @JvmOverloads constructor(
         canvas.drawLine(x + r, y + r, x + r, y + r * 0.1f, detailPaint)
     }
 
-    private fun updateBugs(deltaTime: Float) {
+    private fun notifyBonusTick(now: Long) {
+
+        val seconds =
+            if (tiltUntil > now) ceil((tiltUntil - now) / 1000.0).toLong()
+            else 0L
+
+        if (seconds != lastTiltSeconds) {
+            lastTiltSeconds = seconds
+            listener?.onBonusTick(seconds)
+        }
+    }
+
+    private fun updateBugs(
+        deltaTime: Float,
+        tiltActive: Boolean
+    ) {
+
+        val tiltStrength =
+            (sqrt(tiltX * tiltX + tiltY * tiltY) / TILT_FULL)
+                .coerceIn(0f, 1f)
+
+        val selfFactor =
+            if (tiltActive) {
+                1f - (1f - TILT_MIN_SELF_FACTOR) * tiltStrength
+            } else {
+                1f
+            }
 
         for (bug in bugs) {
 
+            if (tiltActive) {
+
+                bug.driftX += tiltX * TILT_ACCEL * deltaTime
+                bug.driftY += tiltY * TILT_ACCEL * deltaTime
+
+                val drift = sqrt(
+                    bug.driftX * bug.driftX +
+                            bug.driftY * bug.driftY
+                )
+
+                if (drift > TILT_MAX_DRIFT) {
+                    val k = TILT_MAX_DRIFT / drift
+                    bug.driftX *= k
+                    bug.driftY *= k
+                }
+
+            } else {
+
+                val k = (1f - DRIFT_DECAY * deltaTime).coerceAtLeast(0f)
+                bug.driftX *= k
+                bug.driftY *= k
+            }
+
             bug.position.x +=
-                bug.directionX *
-                        bug.speed *
+                (bug.directionX * bug.speed * selfFactor + bug.driftX) *
                         deltaTime
 
             bug.position.y +=
-                bug.directionY *
-                        bug.speed *
+                (bug.directionY * bug.speed * selfFactor + bug.driftY) *
                         deltaTime
 
             if (bug.position.x < bug.size) {
                 bug.position.x = bug.size
-                bug.directionX *= -1
+                bug.directionX = abs(bug.directionX)
+                if (bug.driftX < 0f) bug.driftX = 0f
             }
 
             if (bug.position.x > width - bug.size) {
-                bug.position.x =
-                    width - bug.size
-
-                bug.directionX *= -1
+                bug.position.x = width - bug.size
+                bug.directionX = -abs(bug.directionX)
+                if (bug.driftX > 0f) bug.driftX = 0f
             }
 
             if (bug.position.y < bug.size) {
                 bug.position.y = bug.size
-                bug.directionY *= -1
+                bug.directionY = abs(bug.directionY)
+                if (bug.driftY < 0f) bug.driftY = 0f
             }
 
             if (bug.position.y > height - bug.size) {
-                bug.position.y =
-                    height - bug.size
-
-                bug.directionY *= -1
+                bug.position.y = height - bug.size
+                bug.directionY = -abs(bug.directionY)
+                if (bug.driftY > 0f) bug.driftY = 0f
             }
         }
     }
@@ -348,6 +424,7 @@ class Buggame @JvmOverloads constructor(
 
                 if (sqrt(bdx * bdx + bdy * bdy) <= touchedBonus.size * 1.3f) {
                     bonus = null
+                    tiltUntil = System.currentTimeMillis() + TILT_DURATION_MS
                     listener?.onBonusCollected()
                     invalidate()
                     return true
@@ -406,6 +483,8 @@ class Buggame @JvmOverloads constructor(
             if (remaining <= 0L) {
                 running = false
                 bonus = null
+                tiltUntil = 0L
+                notifyBonusTick(currentTime)
                 listener?.onGameFinished()
                 invalidate()
                 return
@@ -420,7 +499,10 @@ class Buggame @JvmOverloads constructor(
 
             lastFrameTime = currentTime
 
-            updateBugs(deltaTime)
+            val tiltActive = tiltUntil > currentTime
+
+            notifyBonusTick(currentTime)
+            updateBugs(deltaTime, tiltActive)
 
             if (currentTime - lastSpawnTime >= 1000L) {
                 createBug()

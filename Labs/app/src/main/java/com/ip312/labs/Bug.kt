@@ -34,5 +34,7 @@ data class Bug(
     val type: BugType,
     val points: Int,
     var directionX: Float,
-    var directionY: Float
+    var directionY: Float,
+    var driftX: Float = 0f,
+    var driftY: Float = 0f
 )
