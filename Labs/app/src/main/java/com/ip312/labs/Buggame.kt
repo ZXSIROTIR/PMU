@@ -40,7 +40,7 @@ class Buggame @JvmOverloads constructor(
 
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val detailPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    
+
     private val fieldColor: Int = run {
         val value = TypedValue()
         if (context.theme.resolveAttribute(
@@ -70,16 +70,20 @@ class Buggame @JvmOverloads constructor(
     private var speedMultiplier = 1f
     private var sizeMultiplier = 1f
 
+    private var bonusIntervalMs = 15_000L
+
     fun startGame(
         durationMs: Long,
         maxBugs: Int,
         speedMultiplier: Float,
-        sizeMultiplier: Float
+        sizeMultiplier: Float,
+        bonusIntervalMs: Long = 15_000L
     ) {
         this.durationMs = durationMs
         this.maxBugs = maxBugs
         this.speedMultiplier = speedMultiplier
         this.sizeMultiplier = sizeMultiplier
+        this.bonusIntervalMs = bonusIntervalMs
 
         bugs.clear()
 

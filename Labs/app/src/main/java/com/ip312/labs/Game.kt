@@ -93,7 +93,7 @@ class Game : Fragment(),
         viewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user == null) {
                 textStartPlayer.text =
-                    "Игрок не выбран.\nЗарегистрируйтесь или выберите игрока в меню (⋮)."
+                    "Игрок не выбран.\nЗарегистрируйтесь или выберите игрока на вкладке «Игроки»."
                 buttonStart.isEnabled = false
             } else {
                 textStartPlayer.text = "Игрок: ${user.name}"
@@ -131,6 +131,7 @@ class Game : Fragment(),
         val maxBugs = prefs.getInt("cockroaches", 4) + 1
         roundMinutes = prefs.getInt("round", 4) + 1
         val sizeLevel = prefs.getInt("bugSize", 4) + 1
+        val bonusSeconds = prefs.getInt("bonus", 14) + 1
 
         val speedMultiplier = 0.5f + speedLevel * 0.15f
         val sizeMultiplier = 0.5f + sizeLevel * 0.1f
@@ -139,7 +140,8 @@ class Game : Fragment(),
             durationMs = roundMinutes * 60_000L,
             maxBugs = maxBugs,
             speedMultiplier = speedMultiplier,
-            sizeMultiplier = sizeMultiplier
+            sizeMultiplier = sizeMultiplier,
+            bonusIntervalMs = bonusSeconds * 1000L
         )
 
         return true

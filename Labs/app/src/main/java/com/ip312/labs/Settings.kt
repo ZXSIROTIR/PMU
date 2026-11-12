@@ -89,7 +89,7 @@ class Settings : Fragment() {
             prefs.getInt("cockroaches", 4)
 
         seekBonus.progress =
-            prefs.getInt("bonus", 9)
+            prefs.getInt("bonus", 14)
 
         seekRound.progress =
             prefs.getInt("round", 4)
