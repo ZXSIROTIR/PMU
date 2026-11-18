@@ -20,6 +20,8 @@ import androidx.lifecycle.lifecycleScope
 import com.ip312.labs.data.AppDatabase
 import com.ip312.labs.data.GameRecord
 import com.ip312.labs.data.User
+import com.ip312.labs.gold.GoldRate
+import com.ip312.labs.gold.GoldRepository
 import kotlinx.coroutines.launch
 
 class Game : Fragment(),
@@ -34,6 +36,7 @@ class Game : Fragment(),
     private lateinit var textMisses: TextView
     private lateinit var textTime: TextView
     private lateinit var textBonus: TextView
+    private lateinit var textGold: TextView
 
     private lateinit var resultPanel: View
     private lateinit var resultScore: TextView
@@ -95,6 +98,7 @@ class Game : Fragment(),
         textMisses = view.findViewById(R.id.textMisses)
         textTime = view.findViewById(R.id.textTime)
         textBonus = view.findViewById(R.id.textBonus)
+        textGold = view.findViewById(R.id.textGold)
 
         sensorManager = requireContext()
             .getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -117,6 +121,8 @@ class Game : Fragment(),
 
         gameView.listener = this
 
+        loadGoldRate()
+
         viewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user == null) {
                 textStartPlayer.text =
@@ -137,6 +143,23 @@ class Game : Fragment(),
         buttonRestart.setOnClickListener {
             startGame()
         }
+    }
+
+    private fun loadGoldRate() {
+        val repository = GoldRepository.get(requireContext())
+
+        showGold(repository.cached())
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val fresh = repository.refresh()
+            showGold(fresh ?: repository.cached())
+        }
+    }
+
+    private fun showGold(rate: GoldRate?) {
+        textGold.text =
+            if (rate != null) "Золото ЦБ: ${rate.formattedRate()} ₽/г (${rate.date})"
+            else "Золото ЦБ: нет данных"
     }
 
     private fun startGame(): Boolean {
@@ -225,8 +248,7 @@ class Game : Fragment(),
             return
         }
 
-
-        screamStreamId = pool.play(screamSoundId, 0.9f, 0.9f, 1, 0, 1f)
+        screamStreamId = pool.play(screamSoundId, 0.9f, 0.9f, 1, -1, 1f)
     }
 
     private fun stopScream() {
