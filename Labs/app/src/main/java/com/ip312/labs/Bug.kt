@@ -23,6 +23,12 @@ enum class BugType(
         baseSpeed = 100f,
         size = 52f,
         points = 50
+    ),
+
+    GOLD(
+        baseSpeed = 200f,
+        size = 44f,
+        points = 0
     )
 }
 
@@ -36,5 +42,6 @@ data class Bug(
     var directionX: Float,
     var directionY: Float,
     var driftX: Float = 0f,
-    var driftY: Float = 0f
+    var driftY: Float = 0f,
+    val expiresAt: Long = Long.MAX_VALUE
 )

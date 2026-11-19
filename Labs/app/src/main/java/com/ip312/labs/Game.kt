@@ -315,6 +315,14 @@ class Game : Fragment(),
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
     }
 
+    override fun onGoldenBugCaught(points: Int) {
+        Toast.makeText(
+            requireContext(),
+            "Золотой таракан! +$points очков",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
     override fun onGameFinished() {
         textTime.text = "Время: 0"
         stopScream()

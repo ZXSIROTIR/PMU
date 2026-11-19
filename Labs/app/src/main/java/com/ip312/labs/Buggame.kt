@@ -31,8 +31,10 @@ interface GameListener {
     fun onGameFinished()
 
     fun onBonusCollected()
- 
+
     fun onBonusTick(secondsLeft: Long)
+
+    fun onGoldenBugCaught(points: Int)
 }
 
 class Buggame @JvmOverloads constructor(
@@ -53,7 +55,8 @@ class Buggame @JvmOverloads constructor(
     private val skins: Map<BugType, Drawable?> = mapOf(
         BugType.NORMAL to ContextCompat.getDrawable(context, R.drawable.bug_normal),
         BugType.FAST to ContextCompat.getDrawable(context, R.drawable.bug_fast),
-        BugType.RARE to ContextCompat.getDrawable(context, R.drawable.bug_rare)
+        BugType.RARE to ContextCompat.getDrawable(context, R.drawable.bug_rare),
+        BugType.GOLD to ContextCompat.getDrawable(context, R.drawable.bug_gold)
     )
 
     private val fieldColor: Int = run {
@@ -89,6 +92,9 @@ class Buggame @JvmOverloads constructor(
 
     private var useSkins = true
 
+    private var goldPoints = 100
+    private var lastGoldTime = 0L
+
     private class Bonus(
         val position: PointF,
         val size: Float,
@@ -100,7 +106,6 @@ class Buggame @JvmOverloads constructor(
 
     private var tiltUntil = 0L
     private var lastTiltSeconds = 0L
-
 
     private var tiltX = 0f
     private var tiltY = 0f
@@ -117,6 +122,9 @@ class Buggame @JvmOverloads constructor(
         const val BONUS_LIFETIME_MS = 5_000L
 
         const val SKIN_SCALE = 0.9f
+
+        const val GOLD_INTERVAL_MS = 20_000L
+        const val GOLD_LIFETIME_MS = 10_000L
 
         const val TILT_DURATION_MS = 10_000L
 
@@ -136,7 +144,8 @@ class Buggame @JvmOverloads constructor(
         speedMultiplier: Float,
         sizeMultiplier: Float,
         bonusIntervalMs: Long = 15_000L,
-        useSkins: Boolean = true
+        useSkins: Boolean = true,
+        goldPoints: Int = 100
     ) {
         this.durationMs = durationMs
         this.maxBugs = maxBugs
@@ -144,6 +153,7 @@ class Buggame @JvmOverloads constructor(
         this.sizeMultiplier = sizeMultiplier
         this.bonusIntervalMs = bonusIntervalMs
         this.useSkins = useSkins
+        this.goldPoints = goldPoints
 
         bugs.clear()
 
@@ -156,6 +166,7 @@ class Buggame @JvmOverloads constructor(
 
         bonus = null
         lastBonusTime = startTime
+        lastGoldTime = startTime
 
         tiltUntil = 0L
         notifyBonusTick(startTime)
@@ -170,6 +181,10 @@ class Buggame @JvmOverloads constructor(
     fun setTilt(gravityX: Float, gravityY: Float) {
         tiltX = gravityX
         tiltY = gravityY
+    }
+
+    fun setGoldPoints(points: Int) {
+        goldPoints = points
     }
 
     fun stopGame() {
@@ -224,6 +239,55 @@ class Buggame @JvmOverloads constructor(
         )
 
         bugs.add(bug)
+    }
+
+    private fun createGoldenBug(now: Long) {
+
+        if (!running || width <= 0 || height <= 0) {
+            return
+        }
+
+        val type = BugType.GOLD
+        val bugSize = type.size * sizeMultiplier
+        val margin = bugSize
+
+        val x = margin +
+                random.nextFloat() *
+                (width - margin * 2)
+                    .coerceAtLeast(1f)
+
+        val y = margin +
+                random.nextFloat() *
+                (height - margin * 2)
+                    .coerceAtLeast(1f)
+
+        val angle = random.nextFloat() *
+                Math.PI.toFloat() * 2f
+
+        bugs.add(
+            Bug(
+                id = nextId++,
+                position = PointF(x, y),
+                speed = type.baseSpeed * speedMultiplier,
+                size = bugSize,
+                type = type,
+                points = goldPoints,
+                directionX = cos(angle),
+                directionY = sin(angle),
+                expiresAt = now + GOLD_LIFETIME_MS
+            )
+        )
+    }
+
+    private fun drawGoldGlow(canvas: Canvas, bug: Bug) {
+        bodyPaint.color = Color.argb(110, 255, 193, 7)
+
+        canvas.drawCircle(
+            bug.position.x,
+            bug.position.y,
+            bug.size * 1.2f,
+            bodyPaint
+        )
     }
 
     private fun createBonus(now: Long) {
@@ -423,6 +487,16 @@ class Buggame @JvmOverloads constructor(
         canvas: Canvas,
         bug: Bug
     ) {
+        if (bug.type == BugType.GOLD) {
+            val now = System.currentTimeMillis()
+
+            if (bug.expiresAt - now < 2_000L && (now / 150L) % 2L == 0L) {
+                return
+            }
+
+            drawGoldGlow(canvas, bug)
+        }
+
         val skin = if (useSkins) skins[bug.type] else null
 
         if (skin != null) {
@@ -445,6 +519,8 @@ class Buggame @JvmOverloads constructor(
             BugType.RARE ->
                 if (isDarkField) Color.rgb(250, 255, 0)
                 else Color.rgb(250, 255, 0)
+
+            BugType.GOLD -> Color.rgb(255, 179, 0)
         }
 
         canvas.drawCircle(
@@ -507,6 +583,10 @@ class Buggame @JvmOverloads constructor(
 
                 listener?.onBugHit(hitBug.points)
 
+                if (hitBug.type == BugType.GOLD) {
+                    listener?.onGoldenBugCaught(hitBug.points)
+                }
+
             } else {
 
                 listener?.onMiss(5)
@@ -552,6 +632,8 @@ class Buggame @JvmOverloads constructor(
 
             lastFrameTime = currentTime
 
+            bugs.removeAll { it.expiresAt <= currentTime }
+
             val tiltActive = tiltUntil > currentTime
 
             notifyBonusTick(currentTime)
@@ -560,6 +642,11 @@ class Buggame @JvmOverloads constructor(
             if (currentTime - lastSpawnTime >= 1000L) {
                 createBug()
                 lastSpawnTime = currentTime
+            }
+
+            if (currentTime - lastGoldTime >= GOLD_INTERVAL_MS) {
+                createGoldenBug(currentTime)
+                lastGoldTime = currentTime
             }
 
             updateBonus(currentTime)
