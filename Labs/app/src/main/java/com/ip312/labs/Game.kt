@@ -60,6 +60,8 @@ class Game : Fragment(),
     private var screamStreamId = 0
     private var screamLoaded = false
 
+    private var goldRate: GoldRate? = null
+
     private var score = 0
     private var hits = 0
     private var misses = 0
@@ -72,6 +74,10 @@ class Game : Fragment(),
             "game_settings",
             Context.MODE_PRIVATE
         )
+    }
+
+    private companion object {
+        const val DEFAULT_GOLD_RATE = 10_000.0
     }
 
     override fun onCreateView(
@@ -148,18 +154,36 @@ class Game : Fragment(),
     private fun loadGoldRate() {
         val repository = GoldRepository.get(requireContext())
 
-        showGold(repository.cached())
+        goldRate = repository.cached()
+        showGold()
 
         viewLifecycleOwner.lifecycleScope.launch {
             val fresh = repository.refresh()
-            showGold(fresh ?: repository.cached())
+
+            if (fresh != null) {
+                goldRate = fresh
+
+                gameView.setGoldPoints(goldPointsFor(fresh))
+            }
+
+            showGold()
         }
     }
 
-    private fun showGold(rate: GoldRate?) {
+    private fun goldPointsFor(rate: GoldRate?): Int =
+        (rate ?: GoldRate(DEFAULT_GOLD_RATE, "")).points()
+
+    private fun showGold() {
+        val rate = goldRate
+
         textGold.text =
-            if (rate != null) "Золото ЦБ: ${rate.formattedRate()} ₽/г (${rate.date})"
-            else "Золото ЦБ: нет данных"
+            if (rate != null) {
+                "Золото ЦБ: ${rate.formattedRate()} ₽/г → " +
+                        "золотой таракан = ${rate.points()} очков"
+            } else {
+                "Золото ЦБ: нет данных → " +
+                        "золотой таракан = ${goldPointsFor(null)} очков"
+            }
     }
 
     private fun startGame(): Boolean {
@@ -193,8 +217,11 @@ class Game : Fragment(),
             speedMultiplier = speedMultiplier,
             sizeMultiplier = sizeMultiplier,
             bonusIntervalMs = bonusSeconds * 1000L,
-            useSkins = !arachnophobia
+            useSkins = !arachnophobia,
+            goldPoints = goldPointsFor(goldRate)
         )
+
+        loadGoldRate()
 
         return true
     }
@@ -318,7 +345,13 @@ class Game : Fragment(),
     override fun onGoldenBugCaught(points: Int) {
         Toast.makeText(
             requireContext(),
-            "Золотой таракан! +$points очков",
+            goldRate.let { rate ->
+                if (rate != null) {
+                    "Золотой таракан! +$points очков (курс ЦБ ${rate.formattedRate()} ₽/г)"
+                } else {
+                    "Золотой таракан! +$points очков"
+                }
+            },
             Toast.LENGTH_SHORT
         ).show()
     }
